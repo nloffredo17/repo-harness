@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+    environment:
+      - NODE_ENV=development
+    working_dir: /workspace/packages/template
+    command: pnpm dev
+    stdin_open: true
+    tty: true

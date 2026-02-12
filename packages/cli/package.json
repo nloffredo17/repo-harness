@@ -1,0 +1,23 @@
+{
+  "name": "repo-harness",
+  "version": "0.1.0",
+  "description": "Bootstrap agent-ready Next.js repos with devcontainer, checks, and repro packs",
+  "type": "module",
+  "bin": {
+    "repo-harness": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "plugins": ["boundaries"],
+  "settings": {
+    "boundaries/elements": [
+      { "type": "types", "pattern": "src/domains/*/types*" },
+      { "type": "config", "pattern": "src/domains/*/config*" },
+      { "type": "repo", "pattern": "src/domains/*/repo*" },
+      { "type": "service", "pattern": "src/domains/*/service*" },
+      { "type": "runtime", "pattern": "src/domains/*/runtime*" },
+      { "type": "ui", "pattern": ["src/domains/*/ui*", "src/app*"] },
+      { "type": "shared", "pattern": "src/shared*" }
+    ],
+    "boundaries/ignore": ["**/*.test.*", "**/*.spec.*", "**/node_modules/**"]
+  },
+  "rules": {
+    "boundaries/element-types": [
+      2,
+      {
+        "default": "disallow",
+        "rules": [
+          { "from": "types", "allow": [] },
+          { "from": "config", "allow": ["types"] },
+          { "from": "repo", "allow": ["types", "config"] },
+          { "from": "service", "allow": ["types", "config", "repo"] },
+          { "from": "runtime", "allow": ["types", "config", "repo", "service"] },
+          { "from": "ui", "allow": ["types", "runtime", "shared"] },
+          { "from": "shared", "allow": ["types"] }
+        ]
+      }
+    ]
+  }
+}

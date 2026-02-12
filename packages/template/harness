@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")"
+
+case "${1:-}" in
+  dev)
+    pnpm dev
+    ;;
+  check)
+    pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run test:e2e
+    ;;
+  repro)
+    node scripts/repro.mjs "${@:2}"
+    ;;
+  *)
+    echo "Usage: harness {dev|check|repro} [options]"
+    echo "  dev    Start development server"
+    echo "  check  Run lint, typecheck, unit tests, e2e"
+    echo "  repro  Capture repro pack (Playwright trace + screenshots)"
+    exit 1
+    ;;
+esac

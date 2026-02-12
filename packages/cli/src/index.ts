@@ -1,0 +1,86 @@
+import { program } from "commander";
+import {
+  cpSync,
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  existsSync,
+  mkdirSync,
+  rmSync,
+} from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { execSync } from "child_process";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+program
+  .name("repo-harness")
+  .description("Bootstrap agent-ready Next.js repos with devcontainer, checks, and repro packs")
+  .version("0.1.0");
+
+program
+  .command("init <project-name>")
+  .description("Create a new project from the Repo Harness template")
+  .option("--no-install", "Skip pnpm install")
+  .option("--no-devcontainer", "Skip copying .devcontainer (monorepo already has it)")
+  .option("-y, --yes", "Non-interactive")
+  .action(async (projectName: string, opts: { install: boolean; devcontainer: boolean }) => {
+    const targetDir = join(process.cwd(), projectName);
+    if (existsSync(targetDir)) {
+      console.error(`Error: ${targetDir} already exists.`);
+      process.exit(1);
+    }
+
+    const templatePath = join(__dirname, "..", "..", "template");
+    if (!existsSync(templatePath)) {
+      console.error("Error: Template not found at", templatePath);
+      console.error("Run this CLI from the RepoHarness monorepo or install repo-harness from npm.");
+      process.exit(1);
+    }
+
+    mkdirSync(targetDir, { recursive: true });
+    cpSync(templatePath, targetDir, { recursive: true });
+
+    const replacePlaceholders = (dir: string) => {
+      const entries = readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        const full = join(dir, e.name);
+        if (e.isDirectory()) {
+          if (e.name !== "node_modules" && e.name !== ".git") replacePlaceholders(full);
+        } else if (e.isFile()) {
+          const ext = e.name.split(".").pop();
+          if (!["json", "ts", "tsx", "js", "mjs", "md", "yml", "yaml"].includes(ext ?? "")) continue;
+          try {
+            let content = readFileSync(full, "utf-8");
+            if (content.includes("{{PROJECT_NAME}}")) {
+              content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+              writeFileSync(full, content);
+            }
+          } catch (_) {
+            // skip binary or unreadable
+          }
+        }
+      }
+    };
+    replacePlaceholders(targetDir);
+
+    if (opts.install !== false) {
+      console.log("Installing dependencies...");
+      execSync("pnpm install", { cwd: targetDir, stdio: "inherit", shell: true });
+    }
+
+    if (opts.devcontainer === false) {
+      const dc = join(targetDir, ".devcontainer");
+      if (existsSync(dc)) {
+        rmSync(dc, { recursive: true });
+      }
+    }
+
+    console.log("\nDone. Next steps:");
+    console.log(`  cd ${projectName}`);
+    console.log("  harness dev   # or: make dev");
+    console.log("  harness check   # or: make check");
+  });
+
+program.parse();

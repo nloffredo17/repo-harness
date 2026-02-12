@@ -21,3 +21,7 @@
 - **Playwright CI**: Uses `reporter: "list"` in CI for inline output.
 - **Dockerfile**: Pinned to pnpm@9 (not latest).
 - **replacePlaceholders**: Logs console.warn on unreadable files instead of silent skip.
+- **Audit command env**: `pnpm` may be missing on PATH in this environment; use `corepack pnpm ...` for CI-like checks.
+- **Security gate status**: `corepack pnpm audit --audit-level=high` passes after upgrading template Next.js to 15.5.12 (fixed critical/high advisories). One moderate (esbuild via Vitest, dev-only) remains.
+- **Reproducibility note**: Template package does not include a lockfile, so first generated app install determines initial transitive versions until `pnpm-lock.yaml` is committed.
+- **Step 2 audit (packaging)**: Use `pnpm pack`/`pnpm publish` for create-repo-harness; `npm pack` does not replace `workspace:*`. No RELEASING.md; publish order must be repo-harness first, then create-repo-harness.

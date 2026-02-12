@@ -4,3 +4,4 @@
 - **Template package.json**: Uses placeholder `{{PROJECT_NAME}}`; CLI replaces it on init.
 - **CLI**: Built output must have exactly one shebang (tsup banner); source file should not duplicate it or the runner sees "Invalid or unexpected token" on line 2.
 - **Repro script**: Uses `tar -czf` (Unix). On Windows the script may prompt to zip manually.
+- **CLI template path**: `resolveTemplatePath(__dirname)` tries npm layout (`../template` from dist/) first, then monorepo (`../../template`). Prebuild copies `packages/template` into `packages/cli/template` before publish so the published package includes the template.

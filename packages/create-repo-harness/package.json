@@ -1,0 +1,12 @@
+{
+  "name": "create-repo-harness",
+  "version": "0.1.0",
+  "description": "Create a new Repo Harness project with one command",
+  "type": "module",
+  "bin": { "create-repo-harness": "./index.js" },
+  "files": ["index.js"],
+  "dependencies": { "repo-harness": "workspace:*" },
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "https://github.com/owner/RepoHarness", "directory": "packages/create-repo-harness" },
+  "license": "MIT"
+}

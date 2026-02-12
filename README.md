@@ -6,7 +6,24 @@ Inspired by [OpenAI Harness Engineering](https://openai.com/index/harness-engine
 
 ## Quick start
 
-**Bootstrap a new app (from this repo):**
+**Bootstrap a new app (from anywhere, no clone required):**
+
+```bash
+npx repo-harness init my-app
+# or
+npm create repo-harness my-app
+```
+
+Then:
+
+```bash
+cd my-app
+harness dev
+```
+
+**Optional:** `--use-npm`, `--use-yarn`, or `--use-bun` to choose package manager (default: pnpm). Use `--no-install` to skip installing dependencies.
+
+**From this repo (development):**
 
 ```bash
 cd packages/cli && pnpm build
@@ -27,7 +44,8 @@ make check    # lint + typecheck + unit + e2e
 ## Repo structure
 
 - **`packages/template/`** — Next.js 15 app with layered domains, Zod at API boundaries, Vitest + Playwright, ESLint boundaries, Makefile + `harness` script, and repro pack script.
-- **`packages/cli/`** — `repo-harness init <name>` copies the template and applies the project name.
+- **`packages/cli/`** — `repo-harness init <name>` copies the template and applies the project name. Publish to npm for remote bootstrap via `npx repo-harness init`.
+- **`packages/create-repo-harness/`** — Thin wrapper for `npm create repo-harness`, delegates to `repo-harness init`.
 - **`.devcontainer/`** — Dev container config for the monorepo.
 - **`docker-compose.yml`** — Run the app in Docker with hot reload.
 

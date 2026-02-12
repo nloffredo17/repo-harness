@@ -3,21 +3,17 @@
   "version": "0.1.0",
   "description": "Bootstrap agent-ready Next.js repos with devcontainer, checks, and repro packs",
   "type": "module",
-  "bin": {
-    "repo-harness": "./dist/index.js"
-  },
+  "bin": { "repo-harness": "./dist/index.js" },
+  "files": ["dist", "template"],
   "scripts": {
+    "prebuild": "node -e \"const{cpSync}=require('fs');const{join}=require('path');const c=process.cwd();cpSync(join(c,'..','template'),join(c,'template'),{recursive:true})\"",
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "prepublishOnly": "npm run build"
   },
-  "dependencies": {
-    "commander": "^12.1.0"
-  },
-  "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "dependencies": { "commander": "^12.1.0" },
+  "devDependencies": { "tsup": "^8.3.5", "typescript": "^5.7.2" },
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "https://github.com/owner/RepoHarness", "directory": "packages/cli" },
+  "license": "MIT"
 }

@@ -14,6 +14,12 @@ import { execSync } from "child_process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function resolveTemplatePath(cliDir: string): string {
+  const npmLayout = join(cliDir, "..", "template");
+  const monorepoLayout = join(cliDir, "..", "..", "template");
+  return existsSync(npmLayout) ? npmLayout : monorepoLayout;
+}
+
 program
   .name("repo-harness")
   .description("Bootstrap agent-ready Next.js repos with devcontainer, checks, and repro packs")
@@ -22,17 +28,23 @@ program
 program
   .command("init <project-name>")
   .description("Create a new project from the Repo Harness template")
-  .option("--no-install", "Skip pnpm install")
+  .option("--no-install", "Skip dependency install")
   .option("--no-devcontainer", "Skip copying .devcontainer (monorepo already has it)")
+  .option("--use-npm", "Use npm to install dependencies")
+  .option("--use-yarn", "Use yarn to install dependencies")
+  .option("--use-bun", "Use bun to install dependencies")
   .option("-y, --yes", "Non-interactive")
-  .action(async (projectName: string, opts: { install: boolean; devcontainer: boolean }) => {
+  .action(async (
+    projectName: string,
+    opts: { install: boolean; devcontainer: boolean; useNpm?: boolean; useYarn?: boolean; useBun?: boolean }
+  ) => {
     const targetDir = join(process.cwd(), projectName);
     if (existsSync(targetDir)) {
       console.error(`Error: ${targetDir} already exists.`);
       process.exit(1);
     }
 
-    const templatePath = join(__dirname, "..", "..", "template");
+    const templatePath = resolveTemplatePath(__dirname);
     if (!existsSync(templatePath)) {
       console.error("Error: Template not found at", templatePath);
       console.error("Run this CLI from the RepoHarness monorepo or install repo-harness from npm.");
@@ -66,8 +78,12 @@ program
     replacePlaceholders(targetDir);
 
     if (opts.install !== false) {
+      const useNpm = opts.useNpm ?? false;
+      const useYarn = opts.useYarn ?? false;
+      const useBun = opts.useBun ?? false;
+      const installCmd = useBun ? "bun install" : useYarn ? "yarn" : useNpm ? "npm install" : "pnpm install";
       console.log("Installing dependencies...");
-      execSync("pnpm install", { cwd: targetDir, stdio: "inherit", shell: true });
+      execSync(installCmd, { cwd: targetDir, stdio: "inherit", shell: true });
     }
 
     if (opts.devcontainer === false) {

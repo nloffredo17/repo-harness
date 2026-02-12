@@ -17,7 +17,6 @@ if (args.length === 0) {
 }
 const result = spawnSync(process.execPath, [cliPath, "init", ...args], {
   stdio: "inherit",
-  shell: true,
 });
 
 process.exitCode = result.status ?? 1;

@@ -7,7 +7,13 @@ const BodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = BodySchema.safeParse(await request.json());
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const parsed = BodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid body", details: parsed.error.flatten() },

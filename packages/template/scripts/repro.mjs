@@ -65,7 +65,11 @@ function packArtifacts() {
     process.exit(1);
   }
 
-  fs.unlinkSync(reproPath);
+  try {
+    fs.unlinkSync(reproPath);
+  } catch (_) {
+    // best-effort cleanup; file may not exist if writeFileSync failed earlier
+  }
   console.log("\nRepro pack written to:", outPath);
   return outPath;
 }

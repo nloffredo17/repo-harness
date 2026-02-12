@@ -10,3 +10,14 @@
 - **CLI**: Built output must have exactly one shebang (tsup banner); source file should not duplicate it or the runner sees "Invalid or unexpected token" on line 2.
 - **Repro script**: Uses `tar -czf` (Unix). On Windows the script may prompt to zip manually.
 - **CLI template path**: `resolveTemplatePath(__dirname)` tries npm layout (`../template` from dist/) first, then monorepo (`../../template`). Prebuild copies `packages/template` into `packages/cli/template` before publish so the published package includes the template.
+- **CLI version**: Read from package.json via createRequire, not hardcoded.
+- **CLI init error handling**: try/catch around file ops with best-effort `rmSync(targetDir)` cleanup on failure.
+- **CLI install**: Uses `execFileSync(cmd, args)` (no shell) to avoid TypeScript overload issues and improve safety.
+- **Root .gitignore**: Includes repro-*.tar.gz, repro-*.zip, repro.json so repro packs aren't committed.
+- **repro.mjs**: fs.unlinkSync wrapped in try-catch (file may not exist if writeFileSync failed).
+- **Tailwind template**: content paths are src/app and src/domains only (no pages/components).
+- **Template engines**: package.json has `engines: { node: ">=20" }` to match README.
+- **Template .env.example**: Documents env var pattern; copy to .env.local for local dev.
+- **Playwright CI**: Uses `reporter: "list"` in CI for inline output.
+- **Dockerfile**: Pinned to pnpm@9 (not latest).
+- **replacePlaceholders**: Logs console.warn on unreadable files instead of silent skip.

@@ -1,6 +1,6 @@
 FROM node:20-bookworm-slim
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /workspace
 

@@ -9,3 +9,6 @@ test-results
 dist
 packages/cli/template
 *.log
+repro-*.tar.gz
+repro-*.zip
+repro.json

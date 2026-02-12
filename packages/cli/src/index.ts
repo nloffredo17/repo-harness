@@ -11,9 +11,12 @@ import {
 } from "fs";
 import { dirname, join, resolve, sep } from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
+import { createRequire } from "module";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const pkg = require(join(__dirname, "..", "package.json")) as { version: string };
 
 export function resolveTemplatePath(cliDir: string): string {
   const npmLayout = join(cliDir, "..", "template");
@@ -58,8 +61,8 @@ export function replacePlaceholders(dir: string, projectName: string): void {
           content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
           writeFileSync(full, content);
         }
-      } catch (_) {
-        // skip binary or unreadable
+      } catch (err) {
+        console.warn(`[repo-harness] Skipped placeholder replacement in ${full}:`, (err as Error).message);
       }
     }
   }
@@ -68,7 +71,7 @@ export function replacePlaceholders(dir: string, projectName: string): void {
 program
   .name("repo-harness")
   .description("Bootstrap agent-ready Next.js repos with devcontainer, checks, and repro packs")
-  .version("0.1.0");
+  .version(pkg.version);
 
 program
   .command("init <project-name>")
@@ -78,7 +81,6 @@ program
   .option("--use-npm", "Use npm to install dependencies")
   .option("--use-yarn", "Use yarn to install dependencies")
   .option("--use-bun", "Use bun to install dependencies")
-  .option("-y, --yes", "Non-interactive")
   .action(async (
     projectName: string,
     opts: { install: boolean; devcontainer: boolean; useNpm?: boolean; useYarn?: boolean; useBun?: boolean }
@@ -89,6 +91,15 @@ program
       console.error("Error:", (err as Error).message);
       process.exit(1);
     }
+    const useNpm = opts.useNpm ?? false;
+    const useYarn = opts.useYarn ?? false;
+    const useBun = opts.useBun ?? false;
+    const pmCount = [useNpm, useYarn, useBun].filter(Boolean).length;
+    if (pmCount > 1) {
+      console.error("Error: Specify at most one of --use-npm, --use-yarn, --use-bun.");
+      process.exit(1);
+    }
+
     const targetDir = join(process.cwd(), projectName);
     if (existsSync(targetDir)) {
       console.error(`Error: ${targetDir} already exists.`);
@@ -102,28 +113,37 @@ program
       process.exit(1);
     }
 
-    mkdirSync(targetDir, { recursive: true });
-    cpSync(templatePath, targetDir, { recursive: true });
-    const harnessPath = join(targetDir, "harness");
-    if (existsSync(harnessPath)) {
-      chmodSync(harnessPath, 0o755);
-    }
-    replacePlaceholders(targetDir, projectName);
-
-    if (opts.install !== false) {
-      const useNpm = opts.useNpm ?? false;
-      const useYarn = opts.useYarn ?? false;
-      const useBun = opts.useBun ?? false;
-      const installCmd = useBun ? "bun install" : useYarn ? "yarn" : useNpm ? "npm install" : "pnpm install";
-      console.log("Installing dependencies...");
-      execSync(installCmd, { cwd: targetDir, stdio: "inherit", shell: true });
-    }
-
-    if (opts.devcontainer === false) {
-      const dc = join(targetDir, ".devcontainer");
-      if (existsSync(dc)) {
-        rmSync(dc, { recursive: true });
+    try {
+      mkdirSync(targetDir, { recursive: true });
+      cpSync(templatePath, targetDir, { recursive: true });
+      const harnessPath = join(targetDir, "harness");
+      if (existsSync(harnessPath)) {
+        chmodSync(harnessPath, 0o755);
       }
+      replacePlaceholders(targetDir, projectName);
+
+      if (opts.install !== false) {
+        const [cmd, ...args] = (useBun ? "bun install" : useYarn ? "yarn" : useNpm ? "npm install" : "pnpm install").split(" ");
+        console.log("Installing dependencies...");
+        execFileSync(cmd, args, { cwd: targetDir, stdio: "inherit" });
+      }
+
+      if (opts.devcontainer === false) {
+        const dc = join(targetDir, ".devcontainer");
+        if (existsSync(dc)) {
+          rmSync(dc, { recursive: true });
+        }
+      }
+    } catch (err) {
+      if (existsSync(targetDir)) {
+        try {
+          rmSync(targetDir, { recursive: true });
+        } catch (_) {
+          // best-effort cleanup
+        }
+      }
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
     }
 
     console.log("\nDone. Next steps:");

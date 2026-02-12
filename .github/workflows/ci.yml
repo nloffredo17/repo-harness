@@ -37,8 +37,20 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
         working-directory: packages/template
 
-      - name: Harness check (template)
-        run: pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run test:e2e
+      - name: Lint (template)
+        run: pnpm run lint
+        working-directory: packages/template
+
+      - name: Typecheck (template)
+        run: pnpm run typecheck
+        working-directory: packages/template
+
+      - name: Unit tests (template)
+        run: pnpm run test
+        working-directory: packages/template
+
+      - name: E2E tests (template)
+        run: pnpm run test:e2e
         working-directory: packages/template
 
       - name: Upload Playwright report

@@ -1,5 +1,6 @@
 import { program } from "commander";
 import {
+  chmodSync,
   cpSync,
   readFileSync,
   writeFileSync,
@@ -8,7 +9,7 @@ import {
   mkdirSync,
   rmSync,
 } from "fs";
-import { dirname, join, resolve } from "path";
+import { dirname, join, resolve, sep } from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
@@ -18,6 +19,28 @@ export function resolveTemplatePath(cliDir: string): string {
   const npmLayout = join(cliDir, "..", "template");
   const monorepoLayout = join(cliDir, "..", "..", "template");
   return existsSync(npmLayout) ? npmLayout : monorepoLayout;
+}
+
+/** Validates project name: no path traversal, valid chars for npm/dir. Throws on invalid. */
+export function validateProjectName(name: string): void {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    throw new Error("Project name cannot be empty.");
+  }
+  if (/[/\\]/.test(name) || name.includes("..")) {
+    throw new Error("Project name cannot contain path separators (/ or \\) or '..'.");
+  }
+  const resolved = resolve(process.cwd(), name);
+  const cwdResolved = resolve(process.cwd());
+  if (!resolved.startsWith(cwdResolved + sep) && resolved !== cwdResolved) {
+    throw new Error("Project name would create a directory outside the current directory.");
+  }
+  // Basic npm name rules: no leading dot, no leading underscore, avoid reserved names
+  if (/^[._]/.test(trimmed) || /[<>:"|?*]/.test(trimmed)) {
+    throw new Error(
+      "Project name must be a valid directory/npm name (no leading . or _, no < > : \" | ? *).",
+    );
+  }
 }
 
 export function replacePlaceholders(dir: string, projectName: string): void {
@@ -60,6 +83,12 @@ program
     projectName: string,
     opts: { install: boolean; devcontainer: boolean; useNpm?: boolean; useYarn?: boolean; useBun?: boolean }
   ) => {
+    try {
+      validateProjectName(projectName);
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+      process.exit(1);
+    }
     const targetDir = join(process.cwd(), projectName);
     if (existsSync(targetDir)) {
       console.error(`Error: ${targetDir} already exists.`);
@@ -75,6 +104,10 @@ program
 
     mkdirSync(targetDir, { recursive: true });
     cpSync(templatePath, targetDir, { recursive: true });
+    const harnessPath = join(targetDir, "harness");
+    if (existsSync(harnessPath)) {
+      chmodSync(harnessPath, 0o755);
+    }
     replacePlaceholders(targetDir, projectName);
 
     if (opts.install !== false) {

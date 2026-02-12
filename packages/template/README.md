@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-Next.js app bootstrapped with [Repo Harness Starter Kit](https://github.com/your-org/RepoHarness): agent-ready dev, standardized checks, layer boundaries, and repro packs.
+Next.js app bootstrapped with [Repo Harness Starter Kit](https://github.com/nloffredo17/repo-harness): agent-ready dev, standardized checks, layer boundaries, and repro packs.
 
 ## Commands
 

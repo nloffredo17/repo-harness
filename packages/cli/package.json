@@ -17,5 +17,6 @@
   "devDependencies": { "tsup": "^8.3.5", "typescript": "^5.7.2", "vitest": "^2.1.6" },
   "engines": { "node": ">=18" },
   "repository": { "type": "git", "url": "https://github.com/nloffredo17/repo-harness", "directory": "packages/cli" },
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {"access": "public"}
 }

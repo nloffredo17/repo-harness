@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify harness script is executable
+        run: test -x packages/template/harness
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+
       - name: Test CLI (unit + integration)
         run: pnpm --filter repo-harness run test
 

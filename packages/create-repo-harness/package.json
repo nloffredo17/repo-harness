@@ -8,5 +8,6 @@
   "dependencies": { "repo-harness": "workspace:*" },
   "engines": { "node": ">=18" },
   "repository": { "type": "git", "url": "https://github.com/nloffredo17/repo-harness", "directory": "packages/create-repo-harness" },
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {"access": "public"}
 }

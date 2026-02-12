@@ -8,16 +8,38 @@ import {
   mkdirSync,
   rmSync,
 } from "fs";
-import { dirname, join } from "path";
+import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-function resolveTemplatePath(cliDir: string): string {
+export function resolveTemplatePath(cliDir: string): string {
   const npmLayout = join(cliDir, "..", "template");
   const monorepoLayout = join(cliDir, "..", "..", "template");
   return existsSync(npmLayout) ? npmLayout : monorepoLayout;
+}
+
+export function replacePlaceholders(dir: string, projectName: string): void {
+  const entries = readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name !== "node_modules" && e.name !== ".git") replacePlaceholders(full, projectName);
+    } else if (e.isFile()) {
+      const ext = e.name.split(".").pop();
+      if (!["json", "ts", "tsx", "js", "mjs", "md", "yml", "yaml"].includes(ext ?? "")) continue;
+      try {
+        let content = readFileSync(full, "utf-8");
+        if (content.includes("{{PROJECT_NAME}}")) {
+          content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
+          writeFileSync(full, content);
+        }
+      } catch (_) {
+        // skip binary or unreadable
+      }
+    }
+  }
 }
 
 program
@@ -53,29 +75,7 @@ program
 
     mkdirSync(targetDir, { recursive: true });
     cpSync(templatePath, targetDir, { recursive: true });
-
-    const replacePlaceholders = (dir: string) => {
-      const entries = readdirSync(dir, { withFileTypes: true });
-      for (const e of entries) {
-        const full = join(dir, e.name);
-        if (e.isDirectory()) {
-          if (e.name !== "node_modules" && e.name !== ".git") replacePlaceholders(full);
-        } else if (e.isFile()) {
-          const ext = e.name.split(".").pop();
-          if (!["json", "ts", "tsx", "js", "mjs", "md", "yml", "yaml"].includes(ext ?? "")) continue;
-          try {
-            let content = readFileSync(full, "utf-8");
-            if (content.includes("{{PROJECT_NAME}}")) {
-              content = content.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
-              writeFileSync(full, content);
-            }
-          } catch (_) {
-            // skip binary or unreadable
-          }
-        }
-      }
-    };
-    replacePlaceholders(targetDir);
+    replacePlaceholders(targetDir, projectName);
 
     if (opts.install !== false) {
       const useNpm = opts.useNpm ?? false;
@@ -99,4 +99,10 @@ program
     console.log("  harness check   # or: make check");
   });
 
-program.parse();
+// Only run CLI when executed directly (not when imported for tests)
+const currentPath = resolve(fileURLToPath(import.meta.url));
+const scriptPath = process.argv[1] ? resolve(process.cwd(), process.argv[1]) : null;
+const isMainModule = scriptPath != null && currentPath === scriptPath;
+if (isMainModule) {
+  program.parse();
+}

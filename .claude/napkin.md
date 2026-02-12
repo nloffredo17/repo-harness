@@ -1,6 +1,7 @@
 # Repo Harness napkin
 
 - **eslint-plugin-boundaries**: v5.4.0 is used; v4.3.0 does not exist. Template uses ESLint 8 so that `next lint` and `eslint-config-next` (next/core-web-vitals) work; ESLint 9 with flat config would require a different Next/ESLint setup.
+- **Tailwind v4 + PostCSS**: Template uses `@tailwindcss/postcss` (not `tailwindcss` directly); globals.css uses `@import "tailwindcss"`. CLI `program.parse()` runs only when file is main module (`resolve(import.meta.url) === resolve(cwd, argv[1])`) so unit tests can import from index.
 - **Template package.json**: Uses placeholder `{{PROJECT_NAME}}`; CLI replaces it on init.
 - **CLI**: Built output must have exactly one shebang (tsup banner); source file should not duplicate it or the runner sees "Invalid or unexpected token" on line 2.
 - **Repro script**: Uses `tar -czf` (Unix). On Windows the script may prompt to zip manually.

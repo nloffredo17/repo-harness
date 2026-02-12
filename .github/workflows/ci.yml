@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-defaults:
-  run:
-    working-directory: packages/template
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -27,14 +23,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: .
+
+      - name: Test CLI (unit + integration)
+        run: pnpm --filter repo-harness run test
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
         working-directory: packages/template
 
-      - name: Harness check
+      - name: Harness check (template)
         run: pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run test:e2e
+        working-directory: packages/template
 
       - name: Upload Playwright report
         if: failure()
